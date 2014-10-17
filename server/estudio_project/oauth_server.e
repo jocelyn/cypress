@@ -7,20 +7,32 @@ class
 	OAUTH_SERVER
 
 inherit
-	WGI_SERVICE
-
+	WSF_LAUNCHABLE_SERVICE
+		redefine
+			initialize
+		end
 create
-	make
+	make_and_launch 		--method from WSF_LAUNCHABLE_SERVICE that itself call initialize
 
 feature {NONE} -- Initialization
 
-	make
-			-- create a Nino service
+
+	initialize
+			-- Initialize current service.
 		do
-			(create {NINO_SERVICE}.make_custom (Current, "")).listen (port_number)
+			Precursor
+			set_service_option ("port", port_number)
+			--initialize_router
 		end
 
-	execute (req: WGI_REQUEST; res: WGI_RESPONSE)
+	launch (a_service: WSF_SERVICE; opts: detachable WSF_SERVICE_LAUNCHER_OPTIONS)
+		local
+			launcher: WSF_SERVICE_LAUNCHER
+		do
+			create {WSF_DEFAULT_SERVICE_LAUNCHER} launcher.make_and_launch (a_service, opts)
+		end
+
+	execute (req: WSF_REQUEST; res: WSF_RESPONSE)
 		local
 			restour: STRING_32
 			str:STRING
@@ -28,34 +40,13 @@ feature {NONE} -- Initialization
 			parseQ :HASH_TABLE [STRING, STRING]
 		do
 			print("Request%N")
-			str := req.query_string
-			parseQ := parseQuery(str)
-			res.set_status_code (200, Void)
-			res.put_header_text ("Content-Type: text/plain%R%N")
-			if attached parseQ["test"] as test then
-				print("printing value of test%N")
-				res.put_string (test)
+
+			across req.query_parameters as wsf_val loop
+				print(wsf_val.item.key.out)
 			end
 		end
 
-	parseQuery(query:STRING):HASH_TABLE [STRING, STRING]
-		local
-		list:LIST[STRING]
-		ic:ITERATION_CURSOR[STRING]
-		do
-			if attached query as str then
-				create Result.make (5)
-				across str.split ('&') as ics loop
-					list:=ics.item.split('=')
-					--print(list.first)
-					Result[list.first] := list.last
-				end
-			end
-
-			--Result["test"] := list[0]
-		end
-
-	port_number :INTEGER = 6767
+	port_number: INTEGER = 5656
 end
 
 
