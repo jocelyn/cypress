@@ -28,12 +28,12 @@ feature {NONE} -- Initialization
 
 	setup_router
 		local
-			req:AUTH_HANDLER
+
 		do
 			-- Request Test, with on paramater "id", such as /test/foo and /test/bar
-			create req
-			router.map ( create {WSF_URI_TEMPLATE_MAPPING}.make ("/Authentification", req))
+			router.map ( create {WSF_URI_TEMPLATE_MAPPING}.make ("/Authentification", create {AUTH_HANDLER}))
 
+			router.map ( create {WSF_URI_TEMPLATE_MAPPING}.make ("/ClientRegistration/{id}", create {CLIENT_REGISTRATION_HANDLER}))
 		end
 
 	launch (a_service: WSF_SERVICE; opts: detachable WSF_SERVICE_LAUNCHER_OPTIONS)
