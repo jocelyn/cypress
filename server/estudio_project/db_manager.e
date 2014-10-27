@@ -7,46 +7,48 @@ note
 class
 	DB_MANAGER
 
+inherit
+
+	REFACTORING_HELPER
+
 create
 	init
-feature{DB_ACCESS}
 
-	client_cred_map:HASH_TABLE[CLIENT_CREDENTIALS,STRING]
+feature {DB_ACCESS}
+
+	client_cred_map: HASH_TABLE [CLIENT_CREDENTIALS, STRING]
 
 	init
-	do
-			--initialize the data base from a file
-			--init with a size of 10 client
+		do
+			to_implement ("Refactor rename the creation procedure to make")
+				--initialize the data base from a file
+				--init with a size of 10 client
 			create client_cred_map.make (10)
-	end
-
-	isClientRegister(client_id:STRING):BOOLEAN
-	do
-
-	end
-
-	registerClient(client_cred:CLIENT_CREDENTIALS):STRING
-	--return Void in case that the client is allready register otherwise return the client_id
-	local
-		client_id:STRING
-	do
-		client_id := client_cred.get_client_id
-		if client_cred_map.has_key (client_id) then
-			Result := Void
-		else
-			client_cred_map.put (client_cred, client_id)
-			Result := client_id
 		end
 
-	end
+	isClientRegister (client_id: STRING): BOOLEAN
+		do
+			to_implement ("Refactor rename camel case name to is_client_register")
+		end
 
+	registerClient (client_cred: CLIENT_CREDENTIALS): STRING
+			--return Void in case that the client is allready register otherwise return the client_id
+		local
+			client_id: STRING
+		do
+			client_id := client_cred.get_client_id
+			if client_cred_map.has_key (client_id) then
+				Result := Void
+			else
+				client_cred_map.put (client_cred, client_id)
+				Result := client_id
+			end
+		end
 
-
-	findClientCredentials(client_id:STRING):CLIENT_CREDENTIALS
-	--return Void in case no client found
-	do
-		Result := Void
-	end
-
+	findClientCredentials (client_id: STRING): CLIENT_CREDENTIALS
+			--return Void in case no client found
+		do
+			Result := Void
+		end
 
 end

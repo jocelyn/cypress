@@ -10,11 +10,10 @@ class
 feature {NONE} -- Access
 
 	log: LOG_LOGGING_FACILITY
-	local
-		filename: PATH
-		lw_file: LOG_WRITER_FILE
+		local
+			filename: PATH
+			lw_file: LOG_WRITER_FILE
 		once ("PROCESS")
-
 			create Result.make
 			log.enable_default_file_log
 			log.default_log_writer_file.enable_debug_log_level
@@ -23,4 +22,5 @@ feature {NONE} -- Access
 			lw_file.enable_debug_log_level
 			log.register_log_writer (lw_file)
 		end
+
 end
