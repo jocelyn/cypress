@@ -10,7 +10,7 @@
 		<library name="base" location="$ISE_LIBRARY\library\base\base-safe.ecf"/>
 		<library name="default_nino" location="$ISE_LIBRARY\contrib\library\web\framework\ewf\wsf\default\nino-safe.ecf"/>
 		<library name="logging" location="$ISE_LIBRARY\library\runtime\logging\logging-safe.ecf"/>
-		<library name="wsf" location="\home\charles\Application\Eiffel_14.05\contrib\library\web\framework\ewf\wsf\wsf.ecf"/>
+		<library name="wsf" location="$ISE_LIBRARY\contrib\library\web\framework\ewf\wsf\wsf-safe.ecf"/>
 		<cluster name="project" location=".\" recursive="true">
 			<option void_safety="none">
 			</option>
