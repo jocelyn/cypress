@@ -11,7 +11,7 @@ feature {NONE} -- Access
 
 	db: DB_MANAGER
 		once
-			create Result.init
+			create Result.make
 		end
 
 end

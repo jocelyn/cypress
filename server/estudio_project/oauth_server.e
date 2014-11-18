@@ -31,9 +31,7 @@ feature {NONE} -- Initialization
 		end
 
 	setup_router
-		local
 		do
-
 				-- Request Test, with on paramater "id", such as /test/foo and /test/bar
 			router.map (create {WSF_URI_TEMPLATE_MAPPING}.make ("/Authentification", create {AUTH_HANDLER}))
 			router.handle_with_request_methods ("test", create {CLIENT_REGISTRATION_HANDLER}, router.methods_get)
@@ -50,6 +48,8 @@ feature {NONE} -- Initialization
 			log.write_information ("OAUTH SERVER LAUNCHED")
 			create {WSF_DEFAULT_SERVICE_LAUNCHER} launcher.make_and_launch (a_service, opts)
 		end
+
+feature -- Constants
 
 	port_number: INTEGER = 5656
 

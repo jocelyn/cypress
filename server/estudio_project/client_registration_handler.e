@@ -19,38 +19,85 @@ feature {OAUTH_SERVER}
 
 	execute (req: WSF_REQUEST; res: WSF_RESPONSE)
 		local
-			formHandler: STRING
-			client_cred: CLIENT_CREDENTIALS
+			client_cred: detachable CLIENT_CREDENTIALS
 			scopes: LIST [STRING]
+			msg: WSF_PAGE_RESPONSE
+			s: STRING
+			utf: UTF_CONVERTER
 		do
 			log.write_information ("new Request for a Client registration")
-			res.set_status_code (200)
-			res.header.add_content_type_with_charset ("text/html", "utf-8")
-			if req.request_method.is_equal ("GET") then
-				res.put_string (gen_html_post)
-			end
-			if req.request_method.is_equal ("POST") then
-				create client_cred
-				client_cred.set_name (req.form_parameter (FORM_APPNAME).as_string.url_encoded_value)
-				client_cred.set_client_id (req.form_parameter (FORM_CLIENT_ID).as_string.url_encoded_value)
-				client_cred.set_redir_uri (req.form_parameter (FORM_REDIRECTION_URI).as_string.url_encoded_value)
-				client_cred.set_scopes ((req.form_parameter (FORM_SCOPES).as_string.url_encoded_value.as_string_8.split (' ')))
-				if client_cred.is_complete then
-					if db.registerClient (client_cred) = Void then
-						log.write_alert ("The client was already registered")
-						res.put_string ("The client was already registered")
+			create s.make_empty
+
+			create msg.make
+			msg.set_status_code ({HTTP_STATUS_CODE}.ok)
+			msg.header.put_content_type_utf_8_text_plain
+
+			if req.is_get_request_method then
+				msg.set_body (new_html_post)
+				res.send (msg)
+			elseif req.is_post_request_method then
+					-- FIXME: the code should check for existing and valid form data
+				if attached utf8_form_parameter (req, Form_client_id) as l_client_id then
+					create client_cred.make (l_client_id)
+					if attached utf8_form_parameter (req, Form_appname) as l_appname then
+						client_cred.set_app_name (l_appname)
 					end
-				else
-					res.put_string (client_cred.get_error_msg)
+					if attached utf8_form_parameter (req, Form_redirection_uri) as l_redir_uri then
+						client_cred.set_redirection_uri (l_redir_uri)
+					end
+					if attached utf8_form_parameter (req, Form_scopes) as l_scopes then
+						client_cred.set_scopes (l_scopes.split (' '))
+					end
 				end
 
-					--check if there is other way to have POST info
-				print ("Form : " + req.form_parameter ("appname").as_string.url_encoded_value)
-				res.put_string ("" + req.item ("appname").as_string.url_encoded_value)
+				if client_cred /= Void then
+					if client_cred.is_complete then
+						if db.is_client_registered (client_cred.client_id) then
+							log.write_alert ("The client was already registered!")
+							s.append_string ("The client was already registered!")
+						else
+							db.register_client (client_cred)
+						end
+					else
+						s.append_string (client_cred.error_message)
+					end
+				else
+					s.append_string ("Missing required client_id!")
+				end
+
+					-- check if there is other way to have POST info
+				debug ("oauth")
+					print ("Form : ")
+					if attached utf8_form_parameter (req, "appname") as l_appname then
+						print (l_appname)
+					end
+					print ("%N")
+				end
+				if attached req.string_item ("appname") as l_appname then
+					s.append_string (utf.escaped_utf_32_string_to_utf_8_string_8 (l_appname))
+				else
+					s.append_string ("missing appname") -- FIXME
+				end
+				msg.set_body (s)
+				res.send (msg)
+			else
+					-- ... should send something !
+				res.send (create {WSF_NOT_IMPLEMENTED_RESPONSE}.make (req))
 			end
 		end
 
-feature {NONE}
+feature -- Helper
+
+	utf8_form_parameter (req: WSF_REQUEST; a_name: READABLE_STRING_GENERAL): detachable STRING_8
+		local
+			utf: UTF_CONVERTER
+		do
+			if attached {WSF_STRING} req.form_parameter (a_name) as l_param then
+				Result := utf.string_32_to_utf_8_string_8 (l_param.value)
+			end
+		end
+
+feature {NONE} -- Constants
 
 	Form_appname: STRING = "appname"
 
@@ -60,13 +107,15 @@ feature {NONE}
 
 	Form_scopes: STRING = "scopes"
 
-	gen_html_post: STRING
+feature {NONE} -- Implementation	
+
+	new_html_post: STRING
 		do
 			Result := ("<form name=%"input%" action=%"ClientRegistration%" method=%"POST%">" +
-						"App name: <input type=%"text%" name=%"" + FORM_APPNAME + "%"><br>" +
-						"Client_id: <input type=%"text%" name=%"" + FORM_CLIENT_ID + "%"><br>" +
-						"Scopes: <input type=%"text%" name=%"" + FORM_SCOPES + "%"><br>" +
-						"Rediredction URI: <input type=%"text%" name=%"" + FORM_REDIRECTION_URI + "%"><br>" +
+						"App name: <input type=%"text%" name=%"" + form_appname + "%"><br>" +
+						"Client_id: <input type=%"text%" name=%"" + form_client_id + "%"><br>" +
+						"Scopes: <input type=%"text%" name=%"" + form_scopes + "%"><br>" +
+						"Rediredction URI: <input type=%"text%" name=%"" + form_redirection_uri + "%"><br>" +
 						"<input type=%"submit%" value=%"Submit%">" + "</form>")
 		end
 

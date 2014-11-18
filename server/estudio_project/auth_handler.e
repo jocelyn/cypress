@@ -15,22 +15,32 @@ feature {NONE}
 
 	execute (req: WSF_REQUEST; res: WSF_RESPONSE)
 		local
-			restour: STRING_32
-			str: STRING
-			n: INTEGER
-			r: WSF_STRING
-			parseQ: HASH_TABLE [STRING, STRING]
+			msg: WSF_PAGE_RESPONSE
+			s: STRING
 		do
-			res.set_status_code (200)
-			res.put_header_text ("Content-Type: text/plain%R%N")
-			print ("Request%N")
-			across
-				req.query_parameters as wsf_val
-			loop
-				r := wsf_val.item.as_string
-				print (r.url_encoded_name + "=>" + r.url_encoded_value + "%N")
-				res.put_string (r.url_encoded_name + "=>" + r.url_encoded_value + "%N")
+			debug ("oauth")
+				print ("Request%N")
 			end
+
+				-- Compute the response body message
+			create s.make_empty
+			across
+				req.query_parameters as ic
+			loop
+				if attached {WSF_STRING} ic.item as w_string then
+					debug ("oauth")
+						print (w_string.url_encoded_name + "=>" + w_string.url_encoded_value + "%N")
+					end
+					s.append_string (w_string.url_encoded_name + "=>" + w_string.url_encoded_value + "%N")
+				end
+			end
+
+				-- Send the message			
+			create msg.make
+			msg.set_status_code ({HTTP_STATUS_CODE}.ok)
+			msg.header.put_content_type_text_plain
+			msg.set_body (s)
+			res.send (msg)
 		end
 
 end
